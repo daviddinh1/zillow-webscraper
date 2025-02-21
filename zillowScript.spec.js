@@ -1,13 +1,29 @@
 const { By, Key, Builder, Browser, until } = require("selenium-webdriver");
-const assert = require("assert");
+const chrome = require("selenium-webdriver/chrome");
 
-(async function zillowScript() {
-  let driver;
+async function setupDriver() {
+  let options = new chrome.Options();
+  options.addArguments(
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+  );
+
+  // options.addArguments("--headless=new");
+
+  let driver = await new Builder()
+    .forBrowser(Browser.CHROME)
+    .setChromeOptions(options)
+    .build();
+
+  return driver;
+}
+
+async function zillowScript() {
+  const driver = await setupDriver();
+
   try {
-    driver = await new Builder().forBrowser(Browser.CHROME).build();
-    await driver.get("https://www.zillow.com/");
+    await driver.get("https://www.zillow.com");
 
-    // Wait until the search bar is located using its placeholder attribute
+    //how to enter stuff tired of capcha tryna see if it can get house data
     const searchBar = await driver.wait(
       until.elementLocated(
         By.xpath(
@@ -16,19 +32,27 @@ const assert = require("assert");
       ),
       20000
     );
+    await driver.wait(until.elementIsVisible(searchBar), 20000);
+    await searchBar.click();
+
+    await driver.sleep(10000);
 
     await searchBar.sendKeys(11203);
 
+    await driver.sleep(10000);
+
     await searchBar.sendKeys(Key.RETURN);
 
-    // Ensure the search bar is visible and clickable
-    await driver.wait(until.elementIsVisible(searchBar), 10000);
+    await driver.sleep(10000);
 
-    await searchBar.click();
+    //find what skip this button is and then click it and see what happens when the page pops up
   } catch (error) {
     console.error("The error is: ", error);
   } finally {
-    await driver.sleep(30000);
     await driver.quit();
   }
+}
+
+(async function runScript() {
+  await zillowScript();
 })();
